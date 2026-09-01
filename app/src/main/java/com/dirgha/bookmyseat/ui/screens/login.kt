@@ -1,9 +1,12 @@
 package com.dirgha.bookmyseat.ui.screens
 
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -22,6 +25,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.dirgha.bookmyseat.navigation.Screen
 import com.dirgha.bookmyseat.viewmodel.AuthViewModel
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.sp
+import com.dirgha.bookmyseat.data.local.SessionManager
+import com.dirgha.bookmyseat.utils.DeviceUtils
+import com.dirgha.bookmyseat.utils.InternetManager
+import kotlinx.coroutines.delay
 
 @Composable
 fun LoginScreen(
@@ -36,8 +48,36 @@ fun LoginScreen(
     var password by remember {
         mutableStateOf("")
     }
+    val context = LocalContext.current
 
     val message by viewModel.message.collectAsState()
+    var displayMessage by remember { mutableStateOf("") }
+
+    LaunchedEffect(displayMessage) {
+        if (message.isNotEmpty()) {
+            delay(3000)
+            viewModel.clearMessage()
+        }
+    }
+
+    LaunchedEffect(message) {
+        displayMessage =
+            if (
+                message.isNotBlank() &&
+                !message.contains("success", ignoreCase = true)
+            ) {
+                message
+            } else {
+                ""
+            }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            displayMessage = ""
+            viewModel.clearMessage()
+        }
+    }
 
     val fieldShape = RoundedCornerShape(14.dp)
     val fieldColors = TextFieldDefaults.colors(
@@ -92,7 +132,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.width(14.dp))
 
                 Text(
-                    text = "BookMySeat",
+                    text = "DailyCabs",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -121,7 +161,9 @@ fun LoginScreen(
             TextField(
                 value = phone,
                 onValueChange = {
-                    phone = it
+                    if (it.all(Char::isDigit) && it.length <= 10) {
+                        phone = it
+                    }
                 },
                 placeholder = {
                     Text("Mobile number")
@@ -145,6 +187,9 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             // ---------- Password ----------
+            //var password by remember { mutableStateOf("") }
+            var passwordVisible by remember { mutableStateOf(false) }
+
             TextField(
                 value = password,
                 onValueChange = {
@@ -160,44 +205,112 @@ fun LoginScreen(
                         tint = Color.Gray
                     )
                 },
+                trailingIcon = {
+                    IconButton(
+                        onClick = { passwordVisible = !passwordVisible }
+                    ) {
+                        Icon(
+                            imageVector = if (passwordVisible)
+                                Icons.Default.Visibility
+                            else
+                                Icons.Default.VisibilityOff,
+                            contentDescription = null
+                        )
+                    }
+                },
                 singleLine = true,
                 shape = fieldShape,
                 colors = fieldColors,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                visualTransformation = if (passwordVisible)
+                    VisualTransformation.None
+                else
+                    PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
 
-            if (message.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+
                 Text(
-                    text = message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
+
+                    text = "Forgot Password?",
+
+                    color = MaterialTheme.colorScheme.primary,
+
+                    fontWeight = FontWeight.SemiBold,
+
+                    modifier = Modifier.clickable {
+
+                        displayMessage = ""
+
+                        viewModel.clearMessage()
+
+                        navController.navigate(
+                            Screen.ForgotPassword.route
+                        )
+
+                    }
+
                 )
+
+            }
+
+            if (displayMessage.isNotEmpty()) {
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+
+                    text = displayMessage,
+
+                    color = MaterialTheme.colorScheme.error,
+
+                    style = MaterialTheme.typography.bodySmall
+
+                )
+
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            // ---------- Sign In ----------
+            val context = LocalContext.current            // ---------- Sign In ----------
             Button(
+
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
+                enabled = phone.length == 10 &&
+                        password.isNotBlank(),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF0B0C14),
                     contentColor = Color.White
                 ),
                 onClick = {
+                    val deviceId = DeviceUtils.getDeviceId(context)
+                    if (!InternetManager.requireInternet(context)) {
+
+                        Toast.makeText(
+                            context,
+                            "No Internet Connection",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        return@Button
+                    }
 
                     viewModel.login(
-                        phone,
-                        password
+                        phone = phone,
+                        password = password,
+                        deviceId = deviceId,
                     ) { role ->
-
+                        SessionManager.save(context)
+                        displayMessage = ""
+                        viewModel.clearMessage()
                         if (role == "ADMIN") {
 
                             navController.navigate("admin_home") {
@@ -239,6 +352,8 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
+                        displayMessage = ""
+                        viewModel.clearMessage()
                         navController.navigate(
                             Screen.Register.route
                         )

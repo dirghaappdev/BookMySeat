@@ -21,11 +21,12 @@ class MyBookingViewModel : ViewModel() {
 
     val bookings: StateFlow<List<Booking>> =
         _bookings
-
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
     fun loadMyBookings() {
 
         viewModelScope.launch {
-
+            _isLoading.value = true
             try {
 
                 val response =
@@ -43,6 +44,9 @@ class MyBookingViewModel : ViewModel() {
             } catch (e: Exception) {
 
                 e.printStackTrace()
+            }finally {
+
+                _isLoading.value = false
             }
         }
     }

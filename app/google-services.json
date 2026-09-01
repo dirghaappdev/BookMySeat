@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "333124201336",
+    "project_id": "bookmyseat-279db",
+    "storage_bucket": "bookmyseat-279db.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:333124201336:android:eba6a040bc83f0191c768d",
+        "android_client_info": {
+          "package_name": "com.dirgha.bookmyseat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBD6PS1axdrDFEaElyH46iJAuHRWLuGLTw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

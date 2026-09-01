@@ -3,10 +3,12 @@ package com.dirgha.bookmyseat.ui.screens
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -14,18 +16,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.dirgha.bookmyseat.data.model.Route
+import com.dirgha.bookmyseat.utils.InternetManager
 import com.dirgha.bookmyseat.viewmodel.AdminViewModel
 import com.dirgha.bookmyseat.viewmodel.RouteViewModel
 import java.text.SimpleDateFormat
@@ -74,8 +82,8 @@ fun CreateTripScreen(navController: NavController) {
     LaunchedEffect(tripCreated) {
         if (tripCreated) {
             val successMessage = message.ifBlank { "Trip created successfully!" }
-            clearForm()
             navController.navigate("trip_success/${Uri.encode(successMessage)}")
+            //clearForm()
             adminViewModel.resetTripCreatedState()
         }
     }
@@ -115,6 +123,16 @@ fun CreateTripScreen(navController: NavController) {
         ).show()
     }
 
+    // Shared filled-field look used across the form (matches login/register screens)
+    val fieldShape = RoundedCornerShape(12.dp)
+    val fieldColors = TextFieldDefaults.colors(
+        unfocusedContainerColor = Color(0xFFF1F2F4),
+        focusedContainerColor = Color(0xFFF1F2F4),
+        unfocusedIndicatorColor = Color.Transparent,
+        focusedIndicatorColor = Color.Transparent,
+        disabledIndicatorColor = Color.Transparent
+    )
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
         topBar = {
@@ -150,12 +168,13 @@ fun CreateTripScreen(navController: NavController) {
         bottomBar = {
             // Sticks to the bottom; only the form content above scrolls.
             Surface(
-
                 shadowElevation = 8.dp,
                 color = MaterialTheme.colorScheme.surface
             ) {
-                Column( modifier = Modifier.navigationBarsPadding() // keeps clear of gesture nav / nav bar
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 28.dp)
+                Column(
+                    modifier = Modifier
+                        .navigationBarsPadding() // keeps clear of gesture nav / nav bar
+                        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 28.dp)
                 ) {
                     if (message.isNotEmpty() && !tripCreated) {
                         Text(
@@ -166,7 +185,19 @@ fun CreateTripScreen(navController: NavController) {
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                     Button(
+
                         onClick = {
+                            if (!InternetManager.requireInternet(context)) {
+
+                                Toast.makeText(
+                                    context,
+                                    "No Internet Connection",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                                return@Button
+                            }
+
                             adminViewModel.createTrip(
                                 route = selectedDirection,
                                 date = date,
@@ -175,9 +206,19 @@ fun CreateTripScreen(navController: NavController) {
                                 seats = seats.toIntOrNull() ?: 0
                             )
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF0B0C14),
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
                     ) {
-                        Text("Create Trip")
+                        Text(
+                            text = "Create Trip",
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
@@ -190,38 +231,57 @@ fun CreateTripScreen(navController: NavController) {
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp) // tighter gap between cards
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
 
-            // ---------- Route Details ----------
+            // ---------- Route & Schedule ----------
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
 
-                    Text(
-                        text = "Route Details",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Route & Schedule",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    // Route
+                    Text(
+                        text = "Route",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     ExposedDropdownMenuBox(
                         expanded = routeExpanded,
                         onExpandedChange = { routeExpanded = !routeExpanded }
                     ) {
-                        OutlinedTextField(
+                        TextField(
                             value = selectedRoute?.routeName ?: "",
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Select Route") },
+                            placeholder = { Text("Select route") },
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = routeExpanded)
                             },
+                            shape = fieldShape,
+                            colors = fieldColors,
                             modifier = Modifier.fillMaxWidth().menuAnchor()
                         )
 
@@ -242,37 +302,71 @@ fun CreateTripScreen(navController: NavController) {
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
 
-                    if (selectedRoute != null) {
-                        ExposedDropdownMenuBox(
-                            expanded = directionExpanded,
-                            onExpandedChange = { directionExpanded = !directionExpanded }
-                        ) {
-                            OutlinedTextField(
-                                value = selectedDirection,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Select Direction") },
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = directionExpanded)
-                                },
-                                modifier = Modifier.fillMaxWidth().menuAnchor()
-                            )
+                    Spacer(modifier = Modifier.height(14.dp))
 
+                    Text(
+                        text = "Trip",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.Gray
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    ExposedDropdownMenuBox(
+                        expanded = directionExpanded && selectedRoute != null,
+                        onExpandedChange = {
+                            if (selectedRoute != null) {
+                                directionExpanded = !directionExpanded
+                            }
+                        }
+                    ) {
+                        TextField(
+                            value = selectedDirection,
+                            onValueChange = {},
+                            readOnly = true,
+                            enabled = selectedRoute != null,
+                            placeholder = {
+                                Text(
+                                    if (selectedRoute == null)
+                                        "Select route first"
+                                    else
+                                        "Select trip"
+                                )
+                            },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = directionExpanded
+                                )
+                            },
+                            shape = fieldShape,
+                            colors = fieldColors,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                        )
+
+                        if (selectedRoute != null) {
                             ExposedDropdownMenu(
                                 expanded = directionExpanded,
-                                onDismissRequest = { directionExpanded = false }
+                                onDismissRequest = {
+                                    directionExpanded = false
+                                }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text(selectedRoute!!.up) },
+                                    text = {
+                                        Text(selectedRoute!!.up)
+                                    },
                                     onClick = {
                                         selectedDirection = selectedRoute!!.up
                                         directionExpanded = false
                                     }
                                 )
+
                                 DropdownMenuItem(
-                                    text = { Text(selectedRoute!!.down) },
+                                    text = {
+                                        Text(selectedRoute!!.down)
+                                    },
                                     onClick = {
                                         selectedDirection = selectedRoute!!.down
                                         directionExpanded = false
@@ -281,32 +375,23 @@ fun CreateTripScreen(navController: NavController) {
                             }
                         }
                     }
-                }
-            }
 
-            // ---------- Schedule ----------
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                    Spacer(modifier = Modifier.height(14.dp))
 
+                    // Trip Date
                     Text(
-                        text = "Schedule",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary
+                        text = "Trip Date",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.Gray
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(
+                        TextField(
                             value = date,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Trip Date") },
+                            placeholder = { Text("Select date") },
                             trailingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.DateRange,
@@ -314,6 +399,8 @@ fun CreateTripScreen(navController: NavController) {
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             },
+                            shape = fieldShape,
+                            colors = fieldColors,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Box(
@@ -323,14 +410,23 @@ fun CreateTripScreen(navController: NavController) {
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Departure Time (kept as the existing single time-picker field —
+                    // intentionally not the selectable morning/evening box style)
+                    Text(
+                        text = "Departure Time",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(
+                        TextField(
                             value = timeSlot,
                             onValueChange = {},
                             readOnly = true,
-                            label = { Text("Time Slot") },
+                            placeholder = { Text("Select time") },
                             trailingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.AccessTime,
@@ -338,6 +434,8 @@ fun CreateTripScreen(navController: NavController) {
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             },
+                            shape = fieldShape,
+                            colors = fieldColors,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Box(
@@ -354,54 +452,84 @@ fun CreateTripScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
 
-                    Text(
-                        text = "Trip Settings",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Group,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Trip Settings",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Row(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(
-                            value = fare,
-                            onValueChange = { fare = it },
-                            label = { Text("Fare") },
-                            leadingIcon = {
-                                Text(
-                                    text = "₹",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Decimal,
-                                imeAction = ImeAction.Next
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onNext = { seatFocusRequester.requestFocus() }
-                            ),
-                            modifier = Modifier.weight(1f)
-                        )
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Total Seats",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            TextField(
+                                value = seats,
+                                onValueChange = { seats = it },
+                                placeholder = { Text("0") },
+                                shape = fieldShape,
+                                colors = fieldColors,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                    imeAction = ImeAction.Done
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(seatFocusRequester)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.width(12.dp))
 
-                        OutlinedTextField(
-                            value = seats,
-                            onValueChange = { seats = it },
-                            label = { Text("Seats") },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
-                                imeAction = ImeAction.Done
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .focusRequester(seatFocusRequester)
-                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Fare per Seat (₹)",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            TextField(
+                                value = fare,
+                                onValueChange = { fare = it },
+                                placeholder = { Text("0") },
+                                leadingIcon = {
+                                    Text(
+                                        text = "₹",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                },
+                                shape = fieldShape,
+                                colors = fieldColors,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Decimal,
+                                    imeAction = ImeAction.Next
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onNext = { seatFocusRequester.requestFocus() }
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 }
             }

@@ -68,5 +68,6 @@ class AdminViewModel : ViewModel() {
         _tripCreated.value = false
         _message.value = ""
     }
+
 }
 

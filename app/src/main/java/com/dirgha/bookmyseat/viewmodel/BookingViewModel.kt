@@ -21,9 +21,20 @@ class BookingViewModel : ViewModel() {
     fun createBooking(
         token: String,
         tripId: String,
+
+        // Ride
         passengerCount: Int,
         gender: String,
+
+        // Parcel
+        bookingType: String = "RIDE",
+        parcelCount: Int = 0,
+        parcelType: String = "",
+        parcelWeight: String = "",
+
+        // Common
         note: String,
+
         onSuccess: () -> Unit
     ) {
 
@@ -31,21 +42,28 @@ class BookingViewModel : ViewModel() {
 
             try {
 
-                val response =
-                    repository.createBooking(
-                        token,
-                        CreateBookingRequest(
-                            tripId,
-                            passengerCount,
-                            gender,
-                            note
-                        )
+                val response = repository.createBooking(
+
+                    token,
+
+                    CreateBookingRequest(
+                        tripId = tripId,
+                        passengerCount = passengerCount,
+                        gender = gender,
+                        note = note,
+                        bookingType = bookingType,
+                        parcelCount = parcelCount,
+                        parcelType = parcelType,
+                        parcelWeight = parcelWeight
                     )
+                )
+                println("STATUS = ${response.code()}")
+                println("BODY = ${response.body()}")
+                println("ERROR = ${response.errorBody()?.string()}")
 
                 if (response.isSuccessful) {
 
-                    _message.value =
-                        "Booking Created"
+                    _message.value = "Booking Created"
 
                     onSuccess()
 

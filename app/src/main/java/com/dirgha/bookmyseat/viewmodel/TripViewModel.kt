@@ -21,12 +21,15 @@ class TripViewModel : ViewModel() {
     private val _message =
         MutableStateFlow("")
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     val message: StateFlow<String> =
         _message
     fun loadTrips() {
 
         viewModelScope.launch {
-
+            _isLoading.value = true
             try {
 
                 val response =
@@ -38,8 +41,11 @@ class TripViewModel : ViewModel() {
                         response.body() ?: emptyList()
                 }
 
-            } catch (e: Exception) {
+            }
+            catch (e: Exception) {
                 e.printStackTrace()
+            }finally {
+                _isLoading.value = false
             }
         }
     }

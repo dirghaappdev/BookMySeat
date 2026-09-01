@@ -25,6 +25,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.dirgha.bookmyseat.viewmodel.AuthViewModel
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.VisualTransformation
+import com.dirgha.bookmyseat.utils.InternetManager
+import androidx.compose.material.icons.filled.Email
+import android.util.Patterns
+import com.dirgha.bookmyseat.navigation.Screen
 
 @Composable
 fun RegisterScreen(
@@ -39,35 +47,78 @@ fun RegisterScreen(
     var phone by remember {
         mutableStateOf("")
     }
-
+    var email by remember {
+        mutableStateOf("")
+    }
     var password by remember {
         mutableStateOf("")
     }
 
+    var confirmPassword by remember { mutableStateOf("") }
+
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
     val message by
     viewModel.message.collectAsState()
-
+    LaunchedEffect(Unit) {
+        viewModel.clearMessage()
+    }
     val context = LocalContext.current
 
-    // What we actually show inline. Mirrors `message`, but gets wiped the
-    // moment this screen leaves composition (back/sign-in/navigation),
-    // so a stale message never reappears later.
+
     var displayMessage by remember { mutableStateOf("") }
 
     // Local, client-side validation error (10-digit phone, 3-6 char password)
     var validationError by remember { mutableStateOf("") }
 
+//    LaunchedEffect(message) {
+//
+//        if (message == "OTP sent successfully") {
+//
+//            Toast.makeText(
+//                context,
+//                message,
+//                Toast.LENGTH_SHORT
+//            ).show()
+//
+//            viewModel.clearMessage()
+//
+//            navController.navigate(
+//
+//                Screen.OtpVerification.createRoute(
+//
+//                    OtpType.REGISTER.name
+//
+//                )
+//
+//            )
+//
+//        }
+//     else {
+//                displayMessage = message
+//            }
+//        }
     LaunchedEffect(message) {
-        if (message.isNotBlank()) {
-            if (message.contains("success", ignoreCase = true)) {
-                // Success -> toast instead of a lingering on-screen message.
-                val toast = Toast.makeText(context, message, Toast.LENGTH_SHORT)
-                toast.setGravity(Gravity.TOP, 0, 150) // swap to Gravity.BOTTOM if preferred
-                toast.show()
-                displayMessage = ""
-            } else {
-                displayMessage = message
-            }
+
+        if (message.isBlank()) return@LaunchedEffect
+
+        if (message.contains("successful", true)) {
+
+            Toast.makeText(
+                context,
+                message,
+                Toast.LENGTH_SHORT
+            ).show()
+
+            viewModel.clearMessage()
+
+            navController.popBackStack()
+
+        } else {
+
+            displayMessage = message
+
         }
     }
 
@@ -146,7 +197,7 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.width(14.dp))
 
                 Text(
-                    text = "Book My Seat",
+                    text = "DailyCabs",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -175,7 +226,9 @@ fun RegisterScreen(
             TextField(
                 value = name,
                 onValueChange = {
-                    name = it
+                    name = it.filter { char ->
+                        char.isLetter() || char.isWhitespace()
+                    }
                 },
                 placeholder = {
                     Text("Full name")
@@ -221,12 +274,41 @@ fun RegisterScreen(
             )
 
             Spacer(modifier = Modifier.height(14.dp))
+            // ---------- Email field ----------
+            TextField(
+                value = email,
+                onValueChange = {
+                    email = it
 
-            // ---------- Password: capped at 6 (min of 3 enforced on submit) ----------
+                    if (validationError.isNotEmpty()) {
+                        validationError = ""
+                    }
+                },
+                placeholder = {
+                    Text("Email Address")
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Email,
+                        contentDescription = null,
+                        tint = Color.Gray
+                    )
+                },
+                singleLine = true,
+                shape = fieldShape,
+                colors = fieldColors,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+            // ---------- Password: capped at 10 (min of 4 enforced on submit) ----------
             TextField(
                 value = password,
                 onValueChange = {
-                    password = it.take(6)
+                    password = it.take(10)
                 },
                 placeholder = {
                     Text("Password")
@@ -238,11 +320,74 @@ fun RegisterScreen(
                         tint = Color.Gray
                     )
                 },
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            passwordVisible = !passwordVisible
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (passwordVisible)
+                                Icons.Default.Visibility
+                            else
+                                Icons.Default.VisibilityOff,
+                            contentDescription = null
+                        )
+                    }
+                },
                 singleLine = true,
                 shape = fieldShape,
                 colors = fieldColors,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                visualTransformation = if (passwordVisible)
+                    VisualTransformation.None
+                else
+                    PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            TextField(
+                value = confirmPassword,
+                onValueChange = {
+                    confirmPassword = it.take(10)
+                },
+                placeholder = {
+                    Text("Confirm Password")
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = Color.Gray
+                    )
+                },
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            confirmPasswordVisible = !confirmPasswordVisible
+                        }
+                    ) {
+                        Icon(
+                            imageVector = if (confirmPasswordVisible)
+                                Icons.Default.Visibility
+                            else
+                                Icons.Default.VisibilityOff,
+                            contentDescription = null
+                        )
+                    }
+                },
+                singleLine = true,
+                shape = fieldShape,
+                colors = fieldColors,
+                visualTransformation = if (confirmPasswordVisible)
+                    VisualTransformation.None
+                else
+                    PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password
                 ),
                 modifier = Modifier.fillMaxWidth()
@@ -277,20 +422,43 @@ fun RegisterScreen(
                     contentColor = Color.White
                 ),
                 onClick = {
+                    if (!InternetManager.requireInternet(context)) {
 
+                        Toast.makeText(
+                            context,
+                            "No Internet Connection",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        return@Button
+                    }
                     when {
+                        name.trim().isEmpty() -> {
+                            validationError = "Full name is required"
+                        }
                         phone.length != 10 -> {
                             validationError = "Mobile number must be exactly 10 digits"
                         }
-                        password.length < 3 || password.length > 6 -> {
-                            validationError = "Password must be between 3 and 6 characters"
+                        email.isBlank() -> {
+                            validationError = "Email is required"
+                        }
+
+                        !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                            validationError = "Enter a valid email address"
+                        }
+                        password.length < 4 || password.length > 10 -> {
+                            validationError = "Password must be between 4 and 10 characters"
+                        }
+                        password != confirmPassword -> {
+                            validationError = "Passwords do not match"
                         }
                         else -> {
                             validationError = ""
 
                             viewModel.register(
-                                name,
-                                phone,
+                                name.trim(),
+                                phone.trim(),
+                                email.trim(),
                                 password
                             )
                         }

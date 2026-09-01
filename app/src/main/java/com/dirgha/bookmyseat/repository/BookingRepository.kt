@@ -1,6 +1,7 @@
 package com.dirgha.bookmyseat.repository
 
 import com.dirgha.bookmyseat.data.model.CreateBookingRequest
+import com.dirgha.bookmyseat.data.model.RejectBookingRequest
 import com.dirgha.bookmyseat.data.remote.RetrofitClient
 
 class BookingRepository {
@@ -38,10 +39,13 @@ class BookingRepository {
         )
     suspend fun rejectBooking(
         token: String,
-        bookingId: String
+        bookingId: String,
+        reason: String
+
     ) =
         RetrofitClient.api.rejectBooking(
             token,
-            bookingId
+            bookingId,
+            RejectBookingRequest(reason)
         )
 }
