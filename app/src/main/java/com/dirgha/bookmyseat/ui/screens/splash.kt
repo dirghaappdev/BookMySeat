@@ -1,5 +1,7 @@
 package com.dirgha.bookmyseat.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -24,24 +26,32 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.dirgha.bookmyseat.R
+import com.dirgha.bookmyseat.data.local.SessionManager
 import com.dirgha.bookmyseat.navigation.Screen
+import com.dirgha.bookmyseat.ui.components.UpdateDialog
 import com.dirgha.bookmyseat.utils.AppUtils
+import com.dirgha.bookmyseat.utils.Constants
 import com.dirgha.bookmyseat.utils.VersionUtils
 import com.dirgha.bookmyseat.viewmodel.ConfigurationViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import android.content.Intent
-import android.net.Uri
-import com.dirgha.bookmyseat.data.local.SessionManager
-import com.dirgha.bookmyseat.ui.components.UpdateDialog
-
-
-
 
 @Composable
 fun SplashScreen(
     navController: NavController
 ) {
+
+    val context = LocalContext.current
+
+    val viewModel: ConfigurationViewModel =
+        viewModel()
+
+    val configuration by
+    viewModel.configuration.collectAsState()
+
+    val loading by
+    viewModel.loading.collectAsState()
+
     var showSoftUpdate by remember {
         mutableStateOf(false)
     }
@@ -50,36 +60,148 @@ fun SplashScreen(
         mutableStateOf(false)
     }
 
-    val context = LocalContext.current
-    val viewModel: ConfigurationViewModel = viewModel()
+    var hasNavigated by remember {
+        mutableStateOf(false)
+    }
 
+    Log.d(
+        "ENV_TEST",
+        "BASE_URL = ${Constants.BASE_URL}"
+    )
+
+    fun navigateToNextScreen() {
+
+        if (hasNavigated) return
+
+        hasNavigated = true
+
+        SessionManager.load(context)
+
+        when {
+
+            SessionManager.token.isBlank() -> {
+
+                navController.navigate(
+                    Screen.Login.route
+                ) {
+                    popUpTo(
+                        Screen.Splash.route
+                    ) {
+                        inclusive = true
+                    }
+                }
+            }
+
+            SessionManager.role.equals(
+                "ADMIN",
+                true
+            ) -> {
+
+                navController.navigate(
+                    "admin_home"
+                ) {
+                    popUpTo(
+                        Screen.Splash.route
+                    ) {
+                        inclusive = true
+                    }
+                }
+            }
+
+            else -> {
+
+                navController.navigate(
+                    "member_home"
+                ) {
+                    popUpTo(
+                        Screen.Splash.route
+                    ) {
+                        inclusive = true
+                    }
+                }
+            }
+        }
+    }
+
+    fun openPlayStore(url: String) {
+
+        try {
+
+            val intent = Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(url)
+            )
+
+            context.startActivity(intent)
+
+        } catch (e: Exception) {
+
+            Log.e(
+                "UPDATE",
+                "Unable to open Play Store",
+                e
+            )
+        }
+    }
+
+    /*
+     * Load remote configuration
+     */
     LaunchedEffect(Unit) {
+
+        Log.d(
+            "CONFIG",
+            "Starting configuration loading"
+        )
+
         viewModel.loadConfiguration()
     }
 
-
-
-    val configuration by viewModel.configuration.collectAsState()
+    /*
+     * Process configuration
+     */
     LaunchedEffect(configuration) {
 
         configuration?.let { config ->
-            val installedVersion = AppUtils.getAppVersion(context)
 
-            val latestResult = VersionUtils.compareVersions(
-                installedVersion,
-                config.data.config.version.latestVersion
+            val installedVersion =
+                AppUtils.getAppVersion(context)
+
+            val latestResult =
+                VersionUtils.compareVersions(
+                    installedVersion,
+                    config.data.config.version.latestVersion
+                )
+
+            val minimumResult =
+                VersionUtils.compareVersions(
+                    installedVersion,
+                    config.data.config.version.minimumSupportedVersion
+                )
+
+            Log.d(
+                "UPDATE",
+                "Installed = $installedVersion"
             )
 
-            val minimumResult = VersionUtils.compareVersions(
-                installedVersion,
-                config.data.config.version.minimumSupportedVersion
+            Log.d(
+                "UPDATE",
+                "Latest = ${config.data.config.version.latestVersion}"
+            )
+
+            Log.d(
+                "UPDATE",
+                "Minimum = ${config.data.config.version.minimumSupportedVersion}"
             )
 
             when {
 
                 minimumResult == -1 -> {
 
-                    Log.d("UPDATE", "Force Update Required")
+                    Log.d(
+                        "UPDATE",
+                        "Force update required"
+                    )
 
                     showForceUpdate = true
                 }
@@ -87,64 +209,58 @@ fun SplashScreen(
                 latestResult == -1 &&
                         config.data.config.version.softUpdate -> {
 
-                    Log.d("UPDATE", "Soft Update Available")
+                    Log.d(
+                        "UPDATE",
+                        "Soft update available"
+                    )
 
                     showSoftUpdate = true
                 }
 
                 else -> {
 
-                    delay(2500)
+                    delay(1500)
 
-                    SessionManager.load(context)
-
-                    when {
-
-                        SessionManager.token.isBlank() -> {
-
-                            navController.navigate(Screen.Login.route) {
-                                popUpTo(Screen.Splash.route) {
-                                    inclusive = true
-                                }
-                            }
-                        }
-
-                        SessionManager.role.equals("ADMIN", true) -> {
-
-                            navController.navigate("admin_home") {
-                                popUpTo(Screen.Splash.route) {
-                                    inclusive = true
-                                }
-                            }
-                        }
-
-                        else -> {
-
-                            navController.navigate("member_home") {
-                                popUpTo(Screen.Splash.route) {
-                                    inclusive = true
-                                }
-                            }
-                        }
-                    }
+                    navigateToNextScreen()
                 }
-            }}
-    }
-    // Taxi starts tiny (far away)
-    val taxiScale = remember {
-        Animatable(0.01f)
+            }
+        }
     }
 
-    // Logo fade-in
-    val textAlpha = remember {
-        Animatable(0f)
+    /*
+     * If configuration API fails and
+     * there is no cached config,
+     * don't keep splash forever.
+     */
+    LaunchedEffect(loading) {
+
+        if (!loading &&
+            configuration == null
+        ) {
+
+            delay(2000)
+
+            navigateToNextScreen()
+        }
     }
+
+    /*
+     * Splash animations
+     */
+    val taxiScale =
+        remember {
+            Animatable(0.01f)
+        }
+
+    val textAlpha =
+        remember {
+            Animatable(0f)
+        }
 
     LaunchedEffect(Unit) {
 
         launch {
 
-            // Taxi comes toward user
             taxiScale.animateTo(
                 targetValue = 1.55f,
                 animationSpec = tween(
@@ -153,10 +269,11 @@ fun SplashScreen(
                 )
             )
 
-            // Small bounce
             taxiScale.animateTo(
                 targetValue = 1.15f,
-                animationSpec = tween(250)
+                animationSpec = tween(
+                    durationMillis = 250
+                )
             )
         }
 
@@ -164,34 +281,20 @@ fun SplashScreen(
 
         textAlpha.animateTo(
             targetValue = 1f,
-            animationSpec = tween(700)
+            animationSpec = tween(
+                durationMillis = 700
+            )
         )
-
-//        delay(1000)
-//
-//        navController.navigate(
-//            Screen.Login.route
-//        ) {
-//            popUpTo(Screen.Splash.route) {
-//                inclusive = true
-//            }
-//        }
     }
-    fun openPlayStore(url: String) {
 
-        val intent = Intent(
-            Intent.ACTION_VIEW,
-            Uri.parse(url)
-        )
-
-        context.startActivity(intent)
-
-    }
+    /*
+     * SPLASH UI
+     */
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                brush = Brush.verticalGradient(
+                Brush.verticalGradient(
                     colors = listOf(
                         Color(0xFF0D47A1),
                         Color(0xFF1976D2),
@@ -203,133 +306,143 @@ fun SplashScreen(
 
         Column(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment =
+                Alignment.CenterHorizontally,
+            verticalArrangement =
+                Arrangement.Center
         ) {
 
-            // Taxi zoom animation
             Image(
-                painter = painterResource(R.drawable.bms_splashlogo),
+                painter =
+                    painterResource(
+                        R.drawable.bms_splashlogo
+                    ),
                 contentDescription = "Taxi",
                 modifier = Modifier
-                    .scale(taxiScale.value)
+                    .scale(
+                        taxiScale.value
+                    )
                     .size(200.dp)
             )
 
-
             Spacer(
-                modifier = Modifier.height(32.dp)
+                modifier =
+                    Modifier.height(32.dp)
             )
 
             Text(
                 text = "DailyCabs",
-                modifier = Modifier.alpha(textAlpha.value),
+                modifier =
+                    Modifier.alpha(
+                        textAlpha.value
+                    ),
                 color = Color.White,
                 fontSize = 34.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight =
+                    FontWeight.Bold
             )
 
             Spacer(
-                modifier = Modifier.height(8.dp)
+                modifier =
+                    Modifier.height(8.dp)
             )
 
             Text(
-                text = "Intercity Shared Travel",
-                modifier = Modifier.alpha(textAlpha.value),
-                color = Color.White.copy(alpha = 0.9f),
+                text =
+                    "Intercity Shared Travel",
+                modifier =
+                    Modifier.alpha(
+                        textAlpha.value
+                    ),
+                color =
+                    Color.White.copy(
+                        alpha = 0.9f
+                    ),
                 fontSize = 16.sp
             )
         }
 
         Text(
             text = "Powered by Dirgha",
-            color = Color.White.copy(alpha = 0.8f),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 54.dp)
+            color =
+                Color.White.copy(
+                    alpha = 0.8f
+                ),
+            style =
+                MaterialTheme.typography.bodyMedium,
+            modifier =
+                Modifier
+                    .align(
+                        Alignment.BottomCenter
+                    )
+                    .padding(
+                        bottom = 54.dp
+                    )
         )
     }
+
+    /*
+     * SOFT UPDATE
+     */
     configuration?.let { config ->
-    if (showSoftUpdate) {
 
-        UpdateDialog(
+        if (showSoftUpdate) {
 
-            title = config.data.config.version.updateTitle,
+            UpdateDialog(
 
-            message = config.data.config.version.updateMessage,
+                title =
+                    config.data.config.version.updateTitle,
 
-            forceUpdate = false,
+                message =
+                    config.data.config.version.updateMessage,
 
-            onUpdate = {
+                forceUpdate = false,
 
-            },
-            onLater = {
+                onUpdate = {
 
-                showSoftUpdate = false
+                    openPlayStore(
+                        config.data.config.version.playStoreUrl
+                    )
+                },
 
-                SessionManager.load(context)
+                onLater = {
 
-                when {
+                    showSoftUpdate = false
 
-                    SessionManager.token.isBlank() -> {
-
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(Screen.Splash.route) {
-                                inclusive = true
-                            }
-                        }
-                    }
-
-                    SessionManager.role.equals("ADMIN", true) -> {
-
-                        navController.navigate("admin_home") {
-                            popUpTo(Screen.Splash.route) {
-                                inclusive = true
-                            }
-                        }
-                    }
-
-                    else -> {
-
-                        navController.navigate("member_home") {
-                            popUpTo(Screen.Splash.route) {
-                                inclusive = true
-                            }
-                        }
-                    }
+                    navigateToNextScreen()
                 }
-            }
+            )
+        }
+    }
 
-        )
-
-    }}
+    /*
+     * FORCE UPDATE
+     */
     configuration?.let { config ->
-    if (showForceUpdate) {
 
-        UpdateDialog(
+        if (showForceUpdate) {
 
-            title = config.data.config.version.updateTitle,
+            UpdateDialog(
 
-            message = config.data.config.version.updateMessage,
+                title =
+                    config.data.config.version.updateTitle,
 
-            forceUpdate = true,
+                message =
+                    config.data.config.version.updateMessage,
 
-            onUpdate = {
+                forceUpdate = true,
 
-                openPlayStore(
-                    configuration!!.data.config.version.playStoreUrl
-                )
+                onUpdate = {
 
-            },
+                    openPlayStore(
+                        config.data.config.version.playStoreUrl
+                    )
+                },
 
-            onLater = {
-
-            }
-
-        )
-
-    }}
-
+                onLater = {
+                    // Do nothing for force update
+                }
+            )
+        }
+    }
 }
-

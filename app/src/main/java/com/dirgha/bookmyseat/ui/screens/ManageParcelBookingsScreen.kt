@@ -1,6 +1,7 @@
 package com.dirgha.bookmyseat.ui.screens
 
 import android.content.Context
+import androidx.compose.foundation.text.selection.SelectionContainer
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
@@ -25,6 +26,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -772,8 +774,8 @@ private fun ParcelAdminCard(
                     Text(
 
                         text =
-                            parcel.parcelType.ifBlank {
-                                "Parcel"
+                            parcel.userName.ifBlank {
+                                "Unknown User"
                             },
 
                         fontSize =
@@ -787,7 +789,30 @@ private fun ParcelAdminCard(
                         modifier =
                             Modifier.height(2.dp)
                     )
+                    Row(){
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Phone,
+                                contentDescription = "Phone",
+                                modifier = Modifier.size(12.dp)
+                            )
 
+                            Spacer(modifier = Modifier.width(1.dp))
+                            SelectionContainer {
+                            Text(
+                                text = parcel.mobileNumber.ifBlank {
+                                    "Not Provided"
+                                },
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }}
+                        Spacer(
+                            modifier =
+                                Modifier.width(6.dp)
+                        )
                     Text(
 
                         text =
@@ -804,7 +829,7 @@ private fun ParcelAdminCard(
                         fontWeight =
                             FontWeight.Bold
                     )
-                }
+                }}
 
                 StatusChip(
                     status =
@@ -823,10 +848,10 @@ private fun ParcelAdminCard(
 
             SimpleInfoRow(
                 label =
-                    "Customer",
+                    "Category",
                 value =
-                    parcel.userName.ifBlank {
-                        "Unknown User"
+                    parcel.parcelType.ifBlank {
+                        "Parcel"
                     }
             )
 
@@ -834,18 +859,20 @@ private fun ParcelAdminCard(
             // MOBILE
             // =================================================================
 
-            if (
-                parcel.mobileNumber.isNotBlank()
-            ) {
-
-                SimpleInfoRow(
-                    label =
-                        "Mobile",
-                    value =
-                        parcel.mobileNumber
-                )
-            }
-
+            SimpleInfoRow(
+                label = "Contact Person",
+                value = parcel.contactPersonName.ifBlank {
+                    "Not provided"
+                }
+            )
+           SelectionContainer {
+               SimpleInfoRow(
+                   label = "Contact Phone",
+                   value = parcel.contactPersonPhone.ifBlank {
+                       "Not provided"
+                   }
+               )
+           }
             // =================================================================
             // WEIGHT
             // =================================================================
@@ -854,7 +881,7 @@ private fun ParcelAdminCard(
                 label =
                     "Weight",
                 value =
-                    "${parcel.weight} KG • ${parcel.categoryName}"
+                    " ${parcel.categoryName}"
             )
 
             // =================================================================

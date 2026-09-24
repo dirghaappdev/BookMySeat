@@ -36,6 +36,8 @@ import com.dirgha.bookmyseat.data.model.ParcelFare
 import com.dirgha.bookmyseat.data.model.ParcelRejectRequest
 import com.dirgha.bookmyseat.data.model.ParcelRescheduleRequest
 import com.dirgha.bookmyseat.data.model.WeightCategory
+import com.dirgha.bookmyseat.ui.model.AdminAnalyticsResponse
+
 interface ApiService {
 
     @POST("api/auth/register")
@@ -237,4 +239,12 @@ interface ApiService {
         @Path("parcelId") parcelId: String,
         @Body request: ParcelRescheduleRequest
     ): Response<CreateParcelResponse>
+
+
+    @GET("api/admin/analytics/summary")
+    suspend fun getAdminAnalytics(
+        @Query("period") period: String,
+        @Query("year") year: Int? = null,
+        @Query("month") month: Int? = null
+    ): AdminAnalyticsResponse
 }

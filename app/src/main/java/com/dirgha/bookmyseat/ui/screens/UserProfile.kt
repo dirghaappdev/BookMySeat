@@ -46,7 +46,7 @@ fun ProfileScreen(
     val profile by vm.profile.collectAsState()
 
     val context = LocalContext.current
-
+    val isAdmin = SessionManager.role.equals("admin", ignoreCase = true)
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -284,6 +284,32 @@ fun ProfileScreen(
                             }
                         )
                         HorizontalDivider()
+                        if (isAdmin) {
+
+                            ListItem(
+                                headlineContent = {
+                                    Text("Analytics")
+                                },
+                                leadingContent = {
+                                    Icon(
+                                        Icons.Default.StackedBarChart,
+                                        contentDescription = null
+                                    )
+                                },
+                                trailingContent = {
+                                    Icon(
+                                        Icons.Default.KeyboardArrowRight,
+                                        contentDescription = null
+                                    )
+                                },
+                                modifier = Modifier.clickable {
+
+                                    navController.navigate("admin_analytics")
+
+                                }
+                            )
+                            HorizontalDivider()
+                        }
 
                         ListItem(
                             headlineContent = {

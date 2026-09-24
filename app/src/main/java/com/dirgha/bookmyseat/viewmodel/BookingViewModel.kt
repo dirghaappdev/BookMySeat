@@ -12,11 +12,9 @@ class BookingViewModel : ViewModel() {
 
     private val repository = BookingRepository()
 
-    private val _message =
-        MutableStateFlow("")
+    private val _message = MutableStateFlow("")
 
-    val message: StateFlow<String> =
-        _message
+    val message: StateFlow<String> = _message
 
     fun createBooking(
         token: String,
@@ -42,6 +40,14 @@ class BookingViewModel : ViewModel() {
 
             try {
 
+                _message.value = ""
+
+                println("================================")
+                println("CREATE BOOKING STARTED")
+                println("TRIP ID = $tripId")
+                println("BOOKING TYPE = $bookingType")
+                println("================================")
+
                 val response = repository.createBooking(
 
                     token,
@@ -57,27 +63,48 @@ class BookingViewModel : ViewModel() {
                         parcelWeight = parcelWeight
                     )
                 )
+
+                println("================================")
+                println("BOOKING API RESPONSE")
                 println("STATUS = ${response.code()}")
+                println("SUCCESS = ${response.isSuccessful}")
                 println("BODY = ${response.body()}")
                 println("ERROR = ${response.errorBody()?.string()}")
+                println("================================")
 
                 if (response.isSuccessful) {
 
                     _message.value = "Booking Created"
 
+                    println("BOOKING CREATED SUCCESSFULLY")
+                    println("CALLING NAVIGATION CALLBACK")
+
                     onSuccess()
+
+                    println("NAVIGATION CALLBACK FINISHED")
 
                 } else {
 
-                    _message.value =
+                    val error =
                         response.errorBody()?.string()
                             ?: "Booking Failed"
+
+                    _message.value = error
+
+                    println("BOOKING FAILED")
+                    println("ERROR = $error")
                 }
 
             } catch (e: Exception) {
 
+                println("================================")
+                println("BOOKING EXCEPTION")
+                println("MESSAGE = ${e.message}")
+                e.printStackTrace()
+                println("================================")
+
                 _message.value =
-                    e.message ?: "Error"
+                    e.message ?: "Something went wrong"
             }
         }
     }

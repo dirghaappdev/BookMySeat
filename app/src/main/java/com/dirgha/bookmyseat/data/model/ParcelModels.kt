@@ -72,7 +72,10 @@ data class Parcel(
     // Added because admin screen uses these
     val userName: String = "",
     val mobileNumber: String = "",
-    val note: String = ""
+    val note: String = "",
+
+    val contactPersonName: String = "",
+    val contactPersonPhone: String = "",
 )
 
 data class ParcelBookingData(

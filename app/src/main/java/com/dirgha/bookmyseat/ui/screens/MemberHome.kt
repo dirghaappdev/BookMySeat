@@ -195,6 +195,16 @@ fun MemberHomeScreen(
                         IconButton(
 
                             onClick = {
+                                if (!InternetManager.requireInternet(context)) {
+
+                                    Toast.makeText(
+                                        context,
+                                        "No Internet Connection",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    return@IconButton
+                                }
                                 navController.navigate(Screen.Notifications.route)
                             }
 
@@ -212,6 +222,16 @@ fun MemberHomeScreen(
                 }
                     IconButton(
                         onClick = {
+                            if (!InternetManager.requireInternet(context)) {
+
+                                Toast.makeText(
+                                    context,
+                                    "No Internet Connection",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                                return@IconButton
+                            }
                             navController.navigate( Screen.ProfileScreen.route)
                         }
                     ) {
@@ -233,6 +253,16 @@ fun MemberHomeScreen(
                         .fillMaxWidth()
                         .height(55.dp)
                         .clickable {
+                            if (!InternetManager.requireInternet(context)) {
+
+                                Toast.makeText(
+                                    context,
+                                    "No Internet Connection",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                                return@clickable
+                            }
                             navController.navigate(
                                 Screen.BookingSearch.route
                             )
@@ -317,7 +347,7 @@ fun MemberHomeScreen(
                     Card(
                         modifier = Modifier
                             .weight(1f)
-                            .height(100.dp)
+                            .height(90.dp)
                             .clickable {
                                 if (!InternetManager.requireInternet(context)) {
 
@@ -375,7 +405,7 @@ fun MemberHomeScreen(
                     Card(
                         modifier = Modifier
                             .weight(1f)
-                            .height(100.dp)
+                            .height(90.dp)
                             .clickable {
                                 if (!InternetManager.requireInternet(context)) {
 
@@ -433,7 +463,7 @@ fun MemberHomeScreen(
                     Card(
                         modifier = Modifier
                             .weight(1f)
-                            .height(100.dp)
+                            .height(90.dp)
                             .clickable {
                                 if (!InternetManager.requireInternet(context)) {
 
@@ -491,7 +521,7 @@ fun MemberHomeScreen(
                     Card(
                         modifier = Modifier
                             .weight(1f)
-                            .height(100.dp),
+                            .height(90.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = Color(0xFFF4EEFC)
                         ),

@@ -194,26 +194,11 @@ fun MyParcelsScreen(
                 it.agreedFare ?: 0.0
             }
 
-    val successRate =
-
-        if (
-            confirmedParcels +
-            rejectedParcels == 0
-        ) {
-
-            100
-
-        } else {
-
-            (
-                    confirmedParcels * 100
-                            /
-                            (
-                                    confirmedParcels +
-                                            rejectedParcels
-                                    )
-                    )
-        }
+    val successRate = if (totalParcels == 0) {
+        0
+    } else {
+        (confirmedParcels * 100) / totalParcels
+    }
 
     val favouriteRoute =
         parcels

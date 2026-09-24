@@ -186,6 +186,10 @@ fun NotificationScreen(navController: NavController) {
                                 navController.navigate("my_parcels")
                             }
 
+                            "MANAGE_PARCELS" -> {
+                                navController.navigate("manage_parcel_bookings")
+                            }
+
                         }
 
                     }

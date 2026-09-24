@@ -18,6 +18,7 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.dirgha.bookmyseat.data.local.SessionManager.token
 import com.dirgha.bookmyseat.ui.screens.AccountSettingsScreen
+import com.dirgha.bookmyseat.ui.screens.AdminAnalyticsScreen
 import com.dirgha.bookmyseat.viewmodel.AuthViewModel
 import com.dirgha.bookmyseat.ui.screens.AdminHomeScreen
 import com.dirgha.bookmyseat.ui.screens.AllTripsScreen
@@ -348,6 +349,14 @@ fun NavGraph() {
         ) {
             MyParcelsScreen(
                 navController = navController
+            )
+        }
+        composable("admin_analytics") {
+
+            AdminAnalyticsScreen(
+                onBack = {
+                    navController.popBackStack()
+                }
             )
         }
         composable(

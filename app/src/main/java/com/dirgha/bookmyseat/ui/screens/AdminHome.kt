@@ -370,6 +370,28 @@ fun AdminHomeScreen(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
+                if (recentTrips.isEmpty()) {
+
+                    NoTripsCard(
+                        onAddTrip = {
+                            if (!InternetManager.requireInternet(context)) {
+                                Toast.makeText(
+                                    context,
+                                    "No Internet Connection",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                                return@NoTripsCard
+                            }
+
+                            navController.navigate(
+                                Screen.CreateTrip.route
+                            )
+                        }
+                    )
+
+                } else {
+
 
             LazyColumn(
                 modifier = Modifier.weight(1f)
@@ -473,7 +495,7 @@ fun AdminHomeScreen(
         }
     )
 
-}
+}}
 
 @Composable
 fun DashboardActionCard(
@@ -486,7 +508,7 @@ fun DashboardActionCard(
 ) {
     Card(
         modifier = modifier
-            .height(100.dp)
+            .height(90.dp)
             .clickable { onClick() },
         border = BorderStroke(
             width = 1.dp, color = iconColor),
@@ -578,6 +600,199 @@ fun TripsStatusBadge(
             fontWeight = FontWeight.Bold,
             fontSize = 12.sp
         )
+    }
+}
+// =================================================================
+// NO TRIPS CARD
+// =================================================================
+
+@Composable
+private fun NoTripsCard(
+    onAddTrip: () -> Unit
+) {
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                bottom = 20.dp
+            ),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        )
+    ) {
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF3F7FF),
+                            Color.White
+                        )
+                    )
+                )
+                .padding(
+                    horizontal = 24.dp,
+                    vertical = 30.dp
+                )
+        ) {
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment =
+                    Alignment.CenterHorizontally
+            ) {
+
+                // =================================================
+                // ICON
+                // =================================================
+
+                Box(
+                    modifier = Modifier
+                        .size(78.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFFE3F2FD),
+                                    Color(0xFFEDE7F6)
+                                )
+                            )
+                        ),
+                    contentAlignment =
+                        Alignment.Center
+                ) {
+
+                    Icon(
+                        imageVector =
+                            Icons.Default.DirectionsBus,
+                        contentDescription =
+                            null,
+                        tint =
+                            Color(0xFF3949AB),
+                        modifier =
+                            Modifier.size(42.dp)
+                    )
+                }
+
+                Spacer(
+                    modifier = Modifier.height(18.dp)
+                )
+
+
+                // =================================================
+                // TITLE
+                // =================================================
+
+                Text(
+                    text = "No Trips Available",
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1E293B)
+                )
+
+                Spacer(
+                    modifier = Modifier.height(7.dp)
+                )
+
+
+                // =================================================
+                // DESCRIPTION
+                // =================================================
+
+                Text(
+                    text =
+                        "You don't have any trips scheduled yet.",
+                    fontSize = 13.sp,
+                    color = Color(0xFF64748B)
+                )
+
+                Text(
+                    text =
+                        "Create a new trip to start accepting bookings.",
+                    fontSize = 13.sp,
+                    color = Color(0xFF64748B)
+                )
+
+                Spacer(
+                    modifier = Modifier.height(22.dp)
+                )
+
+
+                // =================================================
+                // ADD TRIP BUTTON
+                // =================================================
+
+                Button(
+                    onClick = onAddTrip,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor =
+                            Color.Transparent
+                    ),
+                    contentPadding =
+                        PaddingValues(0.dp)
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color(0xFF1565C0),
+                                        Color(0xFF3949AB),
+                                        Color(0xFF7B1FA2)
+                                    )
+                                ),
+                                shape =
+                                    RoundedCornerShape(16.dp)
+                            ),
+                        contentAlignment =
+                            Alignment.Center
+                    ) {
+
+                        Row(
+                            verticalAlignment =
+                                Alignment.CenterVertically
+                        ) {
+
+                            Icon(
+                                imageVector =
+                                    Icons.Default.AddCircle,
+                                contentDescription =
+                                    null,
+                                tint = Color.White,
+                                modifier =
+                                    Modifier.size(22.dp)
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.width(9.dp)
+                            )
+
+                            Text(
+                                text = "Add New Trip",
+                                color = Color.White,
+                                fontSize = 15.sp,
+                                fontWeight =
+                                    FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

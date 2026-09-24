@@ -107,10 +107,10 @@ fun MyBookingsScreen( navController: NavController) {
         }
 
     val successRate =
-        if (confirmedTrips + rejectedTrips == 0)
-            100
+        if (confirmedTrips == 0)
+            0
         else
-            (confirmedTrips * 100) / (confirmedTrips + rejectedTrips)
+            (confirmedTrips * 100) / totalTrips
 
     val favouriteRoute =
         bookings

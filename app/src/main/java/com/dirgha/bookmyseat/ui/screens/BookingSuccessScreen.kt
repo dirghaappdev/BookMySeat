@@ -26,159 +26,279 @@ fun BookingSuccessScreen(
     bookingId: String,
     status: String
 ) {
+
     val displayStatus =
-        if (status.equals("CONFIRMED", ignoreCase = true))
+        if (
+            status.equals(
+                "CONFIRMED",
+                ignoreCase = true
+            )
+        ) {
             "PENDING"
-        else
+        } else {
             status
+        }
 
     Column(
+
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF4FBF5))   // Light green page background
+            .background(
+                Color(0xFFF4FBF5)
+            )
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+
+        horizontalAlignment =
+            Alignment.CenterHorizontally
+
     ) {
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(
+            modifier = Modifier.height(40.dp)
+        )
 
         Box(
+
             modifier = Modifier
                 .size(180.dp)
                 .background(
                     Color(0xFFE8F7EC),
                     CircleShape
                 ),
-            contentAlignment = Alignment.Center
+
+            contentAlignment =
+                Alignment.Center
+
         ) {
 
             Icon(
-                imageVector = Icons.Outlined.CheckCircle,
+
+                imageVector =
+                    Icons.Outlined.CheckCircle,
+
                 contentDescription = null,
-                tint = Color(0xFF09A53B),
-                modifier = Modifier.size(100.dp)
+
+                tint =
+                    Color(0xFF09A53B),
+
+                modifier =
+                    Modifier.size(100.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(
+            modifier = Modifier.height(30.dp)
+        )
 
         Text(
-            "Request Submitted!",
+            text = "Request Submitted!",
             fontSize = 30.sp,
             fontWeight = FontWeight.SemiBold
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(
+            modifier = Modifier.height(12.dp)
+        )
 
         Text(
-            "Your ride request has been successfully submitted. You will receive a confirmation call shortly.",
-            textAlign = TextAlign.Center,
-            color = Color.Gray,
+
+            text =
+                "Your ride request has been successfully submitted. You will receive a confirmation call shortly.",
+
+            textAlign =
+                TextAlign.Center,
+
+            color =
+                Color.Gray,
+
             fontSize = 15.sp
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(
+            modifier = Modifier.height(32.dp)
+        )
 
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-            border = BorderStroke(
-                1.dp,
-                Color(0xFFE6ECE8)
-            )
+
+            modifier =
+                Modifier.fillMaxWidth(),
+
+            shape =
+                RoundedCornerShape(18.dp),
+
+            colors =
+                CardDefaults.cardColors(
+                    containerColor =
+                        Color.White
+                ),
+
+            border =
+                BorderStroke(
+                    1.dp,
+                    Color(0xFFE6ECE8)
+                )
+
         ) {
 
             Column(
-                modifier = Modifier.padding(20.dp)
+                modifier =
+                    Modifier.padding(20.dp)
             ) {
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    horizontalArrangement =
+                        Arrangement.SpaceBetween
+
                 ) {
 
                     Text(
-                        "Booking ID",
+                        text = "Booking ID",
                         color = Color.Gray
                     )
 
                     Text(
-                        "#BMS${bookingId.takeLast(4)}",
-                        fontWeight = FontWeight.Bold
+
+                        text =
+                            if (bookingId.length >= 4)
+                                "#BMS${bookingId.takeLast(4)}"
+                            else
+                                "#BMS$bookingId",
+
+                        fontWeight =
+                            FontWeight.Bold
                     )
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(
+                    modifier = Modifier.height(18.dp)
+                )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    horizontalArrangement =
+                        Arrangement.SpaceBetween
+
                 ) {
 
                     Text(
-                        "Status",
+                        text = "Status",
                         color = Color.Gray
                     )
 
                     Text(
-                        text = if (status.equals("CONFIRMED", true)) "PENDING" else status,
-                       // color = Color(0xFF09A53B),
-                        color = if (displayStatus.equals("PENDING", true))
-                            Color(0xFFFF9800)
-                        else
-                            Color(0xFF09A53B),
-                        fontWeight = FontWeight.Bold
+
+                        text = displayStatus,
+
+                        color =
+                            if (
+                                displayStatus.equals(
+                                    "PENDING",
+                                    ignoreCase = true
+                                )
+                            ) {
+                                Color(0xFFFF9800)
+                            } else {
+                                Color(0xFF09A53B)
+                            },
+
+                        fontWeight =
+                            FontWeight.Bold
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(
+            modifier = Modifier.height(40.dp)
+        )
 
         Button(
+
             onClick = {
-                navController.navigate(Screen.BookingSearch.route) {
-                    popUpTo(0)
+
+                navController.navigate(
+                    Screen.BookingSearch.route
+                ) {
+
+                    popUpTo(0) {
+                        inclusive = true
+                    }
+
+                    launchSingleTop = true
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Black
-            ),
-            shape = RoundedCornerShape(16.dp)
+
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(58.dp),
+
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor =
+                        Color.Black
+                ),
+
+            shape =
+                RoundedCornerShape(16.dp)
+
         ) {
 
             Text(
-                "Book Another Ride",
+                text = "Book Another Ride",
                 fontSize = 18.sp
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(
+            modifier = Modifier.height(16.dp)
+        )
 
         OutlinedButton(
+
             onClick = {
-                navController.navigate(Screen.MemberHome.route) {
-                    popUpTo(0)
+
+                navController.navigate(
+                    Screen.MemberHome.route
+                ) {
+
+                    popUpTo(0) {
+                        inclusive = true
+                    }
+
+                    launchSingleTop = true
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp),
-            shape = RoundedCornerShape(16.dp)
+
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(58.dp),
+
+            shape =
+                RoundedCornerShape(16.dp)
+
         ) {
 
-            Icon(Icons.Outlined.Home, null)
+            Icon(
+                imageVector =
+                    Icons.Outlined.Home,
+                contentDescription = null
+            )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(
+                modifier = Modifier.width(8.dp)
+            )
 
             Text(
-                "Back to Home",
+                text = "Back to Home",
                 fontSize = 18.sp
             )
         }
