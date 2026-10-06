@@ -1,6 +1,7 @@
 package com.dirgha.bookmyseat.ui.screens
 
 import android.content.Intent
+import androidx.activity.compose.BackHandler
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -8,6 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material3.*
@@ -50,11 +53,18 @@ fun ForgotPasswordScreen(
 
     LaunchedEffect(Unit) {
 
+        viewModel.clearMessage()
+
         val response = ConfigManager(context).getConfiguration()
 
         supportConfig = response?.data?.config?.support
     }
+    BackHandler {
 
+        viewModel.clearMessage()
+
+        navController.popBackStack()
+    }
     val intent = Intent(Intent.ACTION_SENDTO).apply {
         data = Uri.parse("mailto:${supportConfig?.email}")
 
@@ -90,23 +100,21 @@ Thank you.
 
     LaunchedEffect(message) {
 
+        if (message.isBlank()) return@LaunchedEffect
+
         if (message == "OTP sent successfully") {
 
             viewModel.registerEmail = email
 
             navController.navigate(
-
                 Screen.OtpVerification.createRoute(
-
                     OtpType.FORGOT_PASSWORD.name
-
                 )
-
             )
 
         }
-
     }
+
 
     Scaffold(
 
@@ -118,6 +126,23 @@ Thank you.
 
                     Text("Forgot Password")
 
+                },
+                navigationIcon = {
+
+                    IconButton(
+                        onClick = {
+
+                            viewModel.clearMessage()
+
+                            navController.popBackStack()
+                        }
+                    ) {
+
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
                 }
 
             )
@@ -205,6 +230,21 @@ Thank you.
 
                 Text("Send OTP")
 
+            }
+            if (message.isNotBlank()) {
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = message,
+                    color = if (message == "OTP sent successfully") {
+                        Color(0xFF2E7D32)
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    },
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
